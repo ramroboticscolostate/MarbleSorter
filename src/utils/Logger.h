@@ -4,7 +4,7 @@
 #include <string>
 
 // Log header for different event to be included/referenced through files we add.TO log state and catch issues and where
-//how to utilize in other files ex.info: Logger::info("current Marble analysis returned green")
+//how to utilize in other files ex.info: Logger::info("current Marble analysis returned {color}")
 enum class LogType {
     INFO,
     WARN,
