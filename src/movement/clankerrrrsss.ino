@@ -23,6 +23,9 @@ float lastDistanceCm = -1.0f;
 bool obstacleAhead = false;
 bool ultrasonicEnabled = true;   // toggled by A button
 
+//MOUSE MOVEMENT ACCUMULATOR
+
+
 // ========= Helper: set both motors to STOP =========
 void setMotorsNeutral() {
   // 90° => 1500 us pulse => STOP in Sabertooth RC mode
@@ -51,26 +54,89 @@ float readDistanceCm() {
 }
 
 // ========= Bluepad32 callbacks =========
-void onConnectedController(ControllerPtr ctl) {
+//this was for the controller ONLY best to allow general connection functionality as seen below
+// void onConnectedController(ControllerPtr ctl) {
+//   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+//     if (myControllers[i] == nullptr) {
+//       myControllers[i] = ctl;
+//       Serial.printf("Controller connected: index=%d\n", i);
+//       return;
+//     }
+//   }
+//   Serial.println("No empty controller slots available");
+// }
+
+// void onDisconnectedController(ControllerPtr ctl) {
+//   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+//     if (myControllers[i] == ctl) {
+//       Serial.printf("Controller disconnected: index=%d\n", i);
+//       myControllers[i] = nullptr;
+//       return;
+//     }
+//   }
+// }
+
+// DEVice connect / disconnect
+
+void onConnectedController(ControllerPtr ctl){
   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
     if (myControllers[i] == nullptr) {
-      Serial.printf("Controller connected: index=%d\n", i);
       myControllers[i] = ctl;
+      Serial.printf("Device connected: index=%d\n", i);
+
+      //switch statement may be more efficent?
+      if (ctl -> isKeyboard()) Serial.println("Type: Keyboard");
+      else if (ctl -> isMouse()) Serial.println("Type: Mosue");
+      else if (ctl -> isGamepad()) Serial.println("Type: Gamepad");
+      else Serial.println("Type: Other");
       return;
+     }
     }
-  }
-  Serial.println("No empty controller slots available");
+  Serial.println("No empty device slots available");
+
 }
 
-void onDisconnectedController(ControllerPtr ctl) {
+void onDisconnectedController(ControllerPtr ctl){
   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
     if (myControllers[i] == ctl) {
-      Serial.printf("Controller disconnected: index=%d\n", i);
+      Serial.printf("Device disconnected: index=%d\n", i);
       myControllers[i] = nullptr;
       return;
     }
   }
 }
+
+// Keyboard functionality 
+void processKeyboard(ControllerPtr ctl) {
+  float fwd = 0.0f;
+  float turn = 0.0f;
+
+  // WASD or arrow keys
+  if (ctl->isKeyPressed(Keyboard_W) || ctl->isKeyPressed(Keyboard_UpArrow)) {
+    fwd = 1.0f;
+  }
+  if (ctl->isKeyPressed(Keyboard_S) || ctl->isKeyPressed(Keyboard_DownArrow)) {
+    fwd = -1.0f;
+  }
+  if (ctl->isKeyPressed(Keyboard_A) || ctl->isKeyPressed(Keyboard_LeftArrow)) {
+    turn = -0.7f;
+  }
+  if (ctl->isKeyPressed(Keyboard_D) || ctl->isKeyPressed(Keyboard_RightArrow)) {
+    turn = 0.7f;
+  }
+
+  // Space = immediate stop
+  if (ctl->isKeyPressed(Keyboard_Spacebar)) {
+    fwd = 0.0f;
+    turn = 0.0f;
+  }
+
+  // toggle ultrasonic (edge detection)
+    //could be implemented here 
+
+  driveRobot(fwd, turn);
+}
+
 
 // ========= Tank drive logic =========
 void processGamepad(ControllerPtr ctl) {
@@ -180,27 +246,26 @@ void processControllers() {
 // ========= Setup =========
 void setup() {
   Serial.begin(115200);
-  Serial.println("ESP32 + Sabertooth + Ultrasonic (A toggle) + Buzzer (X)");
+  Serial.println("ESP32 + Sabertooth + Keyboard Control");
 
   // Bluepad32
   BP32.setup(&onConnectedController, &onDisconnectedController);
-
-  // Sabertooth outputs
+  // Sabertooth input
   leftServo.attach(ST_leftPin, 1000, 2000);
   rightServo.attach(ST_rightPin, 1000, 2000);
   setMotorsNeutral();
 
   // Ultrasonic pins
-  pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
-  pinMode(ULTRASONIC_ECHO_PIN, INPUT);
-  digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
+  // pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
+  // pinMode(ULTRASONIC_ECHO_PIN, INPUT);
+  // digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
 
   // Indicators
-  pinMode(BRAKE_LED_PIN, OUTPUT);
-  digitalWrite(BRAKE_LED_PIN, LOW);
+  // pinMode(BRAKE_LED_PIN, OUTPUT);
+  // digitalWrite(BRAKE_LED_PIN, LOW);
 
-  pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW);
+  // pinMode(BUZZER_PIN, OUTPUT);
+  // digitalWrite(BUZZER_PIN, LOW);
 }
 
 // ========= Main loop =========
