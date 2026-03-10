@@ -10,10 +10,10 @@ class Drive:
     def setSpeed(self, speed: int):
 
         if not 1 <= speed <= self.MAX_SPEED:
-            raise ValueError(f"Speed must be between 1 and {self.MAX_SPEED}, got{speed}")
+            raise ValueError(f"Speed must be between 1 and {self.MAX_SPEED}, got {speed}")
         self.speed = speed
         print(f"Speed is set to {self.speed}")
-        
+
     def forward(self):
 
         self.motor.drive(self.speed, self.speed)

@@ -38,8 +38,7 @@ class MotorController:
         m1 = 64 + left
         m2 = 192 + right
 
-        self.ser.write(bytes([m1]))
-        self.ser.write(bytes([m2]))
+        self.ser.write(bytes([m1, m2]))
 
     def stop(self):
 
