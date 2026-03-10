@@ -26,24 +26,5 @@ while True:
         if cmd == "q":
             break
 
-    elif cmd == "forward":
-        drive.forward()
-
-    elif cmd == "backward":
-        drive.backward()
-
-    elif cmd == "left":
-        drive.left()
-
-    elif cmd == "right":
-        drive.right()
-
-    elif cmd == "stop":
-        drive.stop()
-
-    elif cmd == "quit":
-        drive.stop()
-        break
-
     else:
         print("Unknown command")
