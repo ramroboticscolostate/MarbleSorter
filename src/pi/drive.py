@@ -1,10 +1,19 @@
 class Drive:
 
-    def __init__(self, motor):
+    MAX_SPEED = 63  #unknown exact going off other docs
+
+    def __init__(self, motor, speed: int =30):
 
         self.motor = motor
-        self.speed = 30 # may need to adjust this based on the actual robot and motor capabilities
+        self.speed = speed # can adjust at runtime with set_speed() use and cmd input
 
+    def setSpeed(self, speed: int):
+
+        if not 1 <= speed <= self.MAX_SPEED:
+            raise ValueError(f"Speed must be between 1 and {self.MAX_SPEED}, got{speed}")
+        self.speed = speed
+        print(f"Speed is set to {self.speed}")
+        
     def forward(self):
 
         self.motor.drive(self.speed, self.speed)
