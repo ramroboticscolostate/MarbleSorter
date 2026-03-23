@@ -6,7 +6,7 @@ from drive import Drive
 # # NOTE
 #     #linux/mac 
 #         tty, terminos
-#     FOR WINDOWS CHECK (I use windows to debug so we can remove all os checks once base working on the pi)
+#     FOR WINDOWS CHECK (I use windows to debug so we can remove all os checks for win32 once base working on the pi)
 #         msvcrt.getwch()
 
 if sys.platform == "win32":
@@ -47,12 +47,16 @@ def main():
             "s": drive.backward,
             "a": drive.left,
             "d": drive.right,
+            "x": drive.spinRight,
+            "z": drive.spinLeft,
             " ": drive.stop,  # space
         }
 
         print("Robot ready")
-        print("Commands: w s a d (space stop) q quit")
+        print("Movement: w = forward <> s = backward <> a = arc left <> d = arc right ~")
+        print("Spin: z = leftSpin [&] x = rightSpin")
         print(f"Speed: {drive.speed} | Use '+' or '-' to adjust speed")
+        print("Quit: q | Esc or Ctrl+c")
     
         try:   
             while True:
