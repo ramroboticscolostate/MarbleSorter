@@ -24,10 +24,16 @@ class Drive:
 
     def left(self):
 
-        self.motor.drive(-self.speed, self.speed)
+        self.motor.drive(self.speed // 2, self.speed)
 
     def right(self):
 
+        self.motor.drive(self.speed, self.speed // 2)
+
+    def spinLeft(self):
+        self.motor.drive(-self.speed, self.speed)
+
+    def spinRight(self):
         self.motor.drive(self.speed, -self.speed)
 
     def stop(self):
