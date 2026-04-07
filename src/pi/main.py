@@ -1,6 +1,26 @@
 import argparse
+import sys
 from motor import MotorController, find_sabertooth_port
 from drive import Drive
+
+if sys.platform == "win32":
+    import msvcrt
+    def getKey():
+        key = msvcrt.getwch()
+        if key in ("\x00", "\xe0"):
+            msvcrt.getwch()
+            return ""
+        return key
+else:
+    import tty, termios
+    def getKey():
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            return sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
 def main():
@@ -37,32 +57,34 @@ def main():
             "s": drive.backward,
             "a": drive.left,
             "d": drive.right,
-            " ": drive.stop,  # space
+            " ": drive.stop,
         }
 
         print("Robot ready")
-        print("Commands: w s a d (space stop) q quit")
-        print(f"Speed: {drive.speed} | Use '+' or '-' to adjust speed")
+        print("Movement: w s a d | space = stop | +/- = speed | q = quit")
+        print(f"Speed: {drive.speed}")
 
         try:
             while True:
+                cmd = getKey()
 
-                cmd = input("> ").lower()
-                if cmd == "q":
+                if cmd in ("q", "\x03", "\x1b"):
+                    print("\nQuitting...")
+                    drive.stop()
                     break
                 elif cmd == "+":
                     drive.setSpeed(min(Drive.MAX_SPEED, drive.speed + 5))
-
                 elif cmd == "-":
                     drive.setSpeed(max(1, drive.speed - 5))
-
                 elif cmd in commands:
                     commands[cmd]()
-
                 else:
-                    print("Unknown command")
+                    #unknown commands  will be treated as stop
+                    drive.stop()
+
         except KeyboardInterrupt:
             print("\nInterrupted")
+            drive.stop()
 
 
 if __name__ == "__main__":
