@@ -1,52 +1,58 @@
 import argparse
 import sys
+import time
 from motor import MotorController, find_sabertooth_port
 from drive import Drive
+
+TIMEOUT = 0.1  # seconds — auto-stop if no key held within this window
 
 if sys.platform == "win32":
     import msvcrt
     def getKey():
-        key = msvcrt.getwch()
-        if key in ("\x00", "\xe0"):
-            msvcrt.getwch()
-            return ""
-        return key
+        end = time.time() + TIMEOUT
+        while time.time() < end:
+            if msvcrt.kbhit():
+                key = msvcrt.getwch()
+                if key in ("\x00", "\xe0"):
+                    msvcrt.getwch()
+                    return ""
+                return key
+            time.sleep(0.005)
+        return None
 else:
-    import tty, termios
+    import tty, termios, select
     def getKey():
-        fd = sys.stdin.fileno()
-        old = termios.tcgetattr(fd)
-        try:
-            tty.setraw(fd)
+        rlist, _, _ = select.select([sys.stdin], [], [], TIMEOUT)
+        if rlist:
             return sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        return None
+
+
+def list_ports():
+    try:
+        import serial.tools.list_ports
+        ports = list(serial.tools.list_ports.comports())
+        if ports:
+            print("Available serial ports:")
+            for p in ports:
+                print(f"  {p.device}: {p.description}")
+            detected = find_sabertooth_port()
+            if detected:
+                print(f"\nAuto-detect would pick: {detected}")
+        else:
+            print("No serial ports found")
+    except ImportError:
+        print("pyserial not installed // pip install pyserial")
 
 
 def main():
 
     parser = argparse.ArgumentParser(description="Robot keyboard controller")
-    parser.add_argument("--mock", action="store_true", help="Run in mock mode (no hardware)")
-    parser.add_argument("--speed", type=int, default=30, help="Drive speed 1-63 (default: 30)")
-    parser.add_argument("--port", type=str, default=None, help="Serial port (e.g. /dev/ttyUSB0, COM3)")
-    parser.add_argument("--list-ports", action="store_true", help="List available serial ports and exit")
-    args = parser.parse_args()
+
+    args = addArguments(parser)
 
     if args.list_ports:
-        try:
-            import serial.tools.list_ports
-            ports = list(serial.tools.list_ports.comports())
-            if ports:
-                print("Available serial ports:")
-                for p in ports:
-                    print(f"  {p.device}: {p.description}")
-                detected = find_sabertooth_port()
-                if detected:
-                    print(f"\nAuto-detect would pick: {detected}")
-            else:
-                print("No serial ports found")
-        except ImportError:
-            print("pyserial not installed // pip install pyserial")
+        list_ports()
         return
 
     with MotorController(mock=args.mock, port=args.port) as motor:
@@ -57,14 +63,22 @@ def main():
             "s": drive.backward,
             "a": drive.left,
             "d": drive.right,
+            "z": drive.spinLeft,
+            "x": drive.spinRight,
             " ": drive.stop,
         }
 
         print("Robot ready")
-        print("Movement: w s a d | space = stop | +/- = speed | q = quit")
+        print("Hold w/a/s/d to move, z/x to spin | release to stop | +/- = speed | q = quit")
         print(f"Speed: {drive.speed}")
 
+        if sys.platform != "win32":
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            tty.setraw(fd)
+
         try:
+            moving = False
             while True:
                 cmd = getKey()
 
@@ -78,13 +92,28 @@ def main():
                     drive.setSpeed(max(1, drive.speed - 5))
                 elif cmd in commands:
                     commands[cmd]()
+                    moving = True
                 else:
-                    #unknown commands  will be treated as stop
-                    drive.stop()
+                    if moving:
+                        drive.stop()
+                        moving = False
 
         except KeyboardInterrupt:
             print("\nInterrupted")
             drive.stop()
+        finally:
+            if sys.platform != "win32":
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+# FOR DEBUGGING IN CMD PROMPT python main.py --ARGUMENT
+def addArguments(parser):
+    parser.add_argument("--mock", action="store_true", help="Run in mock mode (no hardware)")
+    parser.add_argument("--speed", type=int, default=30, help="Drive speed 1-63 (default: 30)")
+    parser.add_argument("--port", type=str, default=None, help="Serial port (e.g. /dev/ttyUSB0, COM3)")
+    # WHen linking port this can help troubleshoot sabertooth conn. CHECK LINE 33 MOTOR.py if continous no connection
+    parser.add_argument("--list-ports", action="store_true", help="List available serial ports and exit")
+    return parser.parse_args()
+
 
 
 if __name__ == "__main__":
