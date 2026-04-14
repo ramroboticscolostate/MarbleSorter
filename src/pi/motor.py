@@ -52,7 +52,7 @@ class MotorController:
         right = max(-63, min(63, right))
 
         if self.mock:
-            print(f"DRIVE left={left} right={right}")
+            print(f"MOCK drive: left={left}, right={right}", end="\r\n")
             return
 
         m1 = 64 + left
