@@ -87,9 +87,9 @@ def main():
                     drive.stop()
                     break
                 elif cmd == "+":
-                    drive.setSpeed(min(Drive.MAX_SPEED, drive.speed + 5))
+                    drive.set_speed(min(Drive.MAX_SPEED, drive.speed + 5))
                 elif cmd == "-":
-                    drive.setSpeed(max(1, drive.speed - 5))
+                    drive.set_speed(max(1, drive.speed - 5))
                 elif cmd in commands:
                     commands[cmd]()
                     moving = True
