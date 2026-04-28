@@ -3,30 +3,29 @@
 # SPDX-License-Identifier: MIT
 
 import time
-import board
-from digitalio import DigitalInOut, Direction
+import RPi.GPIO as GPIO
 
-# direction and step pins as outputs
-DIR = DigitalInOut(board.D5)
-DIR.direction = Direction.OUTPUT
-STEP = DigitalInOut(board.D6)
-STEP.direction = Direction.OUTPUT
+# Use BCM pin numbering
+GPIO.setmode(GPIO.BCM)
 
-# microstep mode, default is 1/16 so 16
-# another ex: 1/4 microstep would be 4
+DIR_PIN = 5   # D5 = BCM 5
+STEP_PIN = 6  # D6 = BCM 6
+
+GPIO.setup(DIR_PIN, GPIO.OUT)
+GPIO.setup(STEP_PIN, GPIO.OUT)
+
 microMode = 16
-# full rotation multiplied by the microstep divider
 steps = 200 * microMode
 
-while True:
-    # change direction every loop
-    DIR.value = not DIR.value
-    # toggle STEP pin to move the motor
-    for i in range(steps):
-        STEP.value = True
-        time.sleep(0.001)
-        STEP.value = False
-        time.sleep(0.001)
-    print("rotated! now reverse")
-    # 1 second delay before starting again
-    time.sleep(1)
+try:
+    while True:
+        GPIO.output(DIR_PIN, not GPIO.input(DIR_PIN))  # toggle direction
+        for i in range(steps):
+            GPIO.output(STEP_PIN, True)
+            time.sleep(0.001)
+            GPIO.output(STEP_PIN, False)
+            time.sleep(0.001)
+        print("rotated! now reverse")
+        time.sleep(1)
+except KeyboardInterrupt:
+    GPIO.cleanup()
