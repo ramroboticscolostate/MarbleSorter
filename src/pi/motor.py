@@ -1,8 +1,8 @@
 import time
 
 try:
-    import serial
-    import serial.tools.list_ports
+    import serial # type: ignore
+    import serial.tools.list_ports # type: ignore
     SERIAL_AVAILABLE = True
 except ImportError:
     SERIAL_AVAILABLE = False

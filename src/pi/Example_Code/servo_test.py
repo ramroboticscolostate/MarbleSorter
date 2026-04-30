@@ -5,7 +5,10 @@ import time
 # Change this pin number to match your wiring.
 SERVO_PIN = 4
 
-servo = Servo(SERVO_PIN)
+# Some servos need a wider pulse range than the default.
+# Adjust min_pulse_width and max_pulse_width if your servo still
+# does not reach its full mechanical travel.
+servo = Servo(SERVO_PIN, min_pulse_width=0.0005, max_pulse_width=0.0025)
 
 try:
     while True:
@@ -19,9 +22,9 @@ try:
 
         print("Moving servo to maximum position...")
         servo.max()
-        time.sleep(1)
+        time.sleep(3)
 
-        print("Sweeping servo smoothly...")
+        print("Swegiteping servo smoothly...")
         for position in [i / 10 for i in range(-10, 11)]:
             servo.value = position
             time.sleep(0.05)

@@ -31,7 +31,7 @@ else:
 
 def list_ports():
     try:
-        import serial.tools.list_ports
+        import serial.tools.list_ports   # type: ignore
         ports = list(serial.tools.list_ports.comports())
         if ports:
             print("Available serial ports:")
@@ -76,6 +76,8 @@ def main():
             "x": drive.spinRight,
             " ": drive.stop,
         }
+
+        
 
         print("Robot ready")
         print("Hold w/a/s/d to move, z/x to spin | release to stop | +/- = speed | q = quit")
