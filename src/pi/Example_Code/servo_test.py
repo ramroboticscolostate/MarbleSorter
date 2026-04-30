@@ -8,7 +8,7 @@ SERVO_PIN = 4
 # Some servos need a wider pulse range than the default.
 # Adjust min_pulse_width and max_pulse_width if your servo still
 # does not reach its full mechanical travel.
-servo = Servo(SERVO_PIN, min_pulse_width=0.0005, max_pulse_width=0.0025)
+servo = Servo(SERVO_PIN, min_pulse_width=0.0005, max_pulse_width=0.005)
 
 try:
     while True:
