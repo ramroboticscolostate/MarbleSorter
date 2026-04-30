@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO   # type: ignore
 
 # Use BCM pin numbering
 GPIO.setmode(GPIO.BCM)
