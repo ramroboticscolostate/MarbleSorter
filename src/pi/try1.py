@@ -16,18 +16,18 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 # ---- Motor driver pins (brush + conveyor) ----
-BRUSH_IN1 = 17
-BRUSH_IN2 = 27
+BRUSH_IN1 = 12
+#BRUSH_IN2 = 27
 
-CONV_IN1 = 22
-CONV_IN2 = 23
+CONV_IN1 = 18
+#CONV_IN2 = 23
 
 # ---- Stepper ----
 STEP_PIN = 6
 DIR_PIN = 5
 
 # ---- Servo ----
-SERVO_PIN = 18
+SERVO_PIN = 4
 
 
 GPIO.setup([BRUSH_IN1, BRUSH_IN2, CONV_IN1, CONV_IN2], GPIO.OUT)
