@@ -17,10 +17,10 @@ GPIO.setwarnings(False)
 
 # ---- Motor driver pins (brush + conveyor) ----
 BRUSH_IN1 = 12
-#BRUSH_IN2 = 27
+BRUSH_IN2 = 27
 
 CONV_IN1 = 18
-#CONV_IN2 = 23
+CONV_IN2 = 23
 
 # ---- Stepper ----
 STEP_PIN = 6
