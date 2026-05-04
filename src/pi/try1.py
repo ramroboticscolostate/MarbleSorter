@@ -93,12 +93,13 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--mock", action="store_true")
+    parser.add_argument("--port", type=str, default=None, help="Serial port for Sabertooth (e.g. /dev/ttyUSB0, COM3)")
     parser.add_argument("--pico-port", type=str, default=None, help="Serial port for the Pico (e.g. COM4)")
     parser.add_argument("--no-pico", action="store_true", help="Disable Pico color reader")
     args = parser.parse_args()
 
     # ---------------- MOTOR DRIVE ----------------
-    with MotorController(mock=args.mock) as motor:
+    with MotorController(mock=args.mock, port=args.port) as motor:
         drive = Drive(motor)
 
         # ---------------- PICO (OPTIONAL) ----------------
