@@ -4,9 +4,9 @@ import time
 
 import RPi.GPIO as GPIO
 
-from motor import MotorController
+from motor import MotorController, find_sabertooth_port
 from drive import Drive
-from pico import PicoColorReader
+from pico import PicoColorReader, find_pico_port
 
 
 # =========================================================
@@ -87,6 +87,27 @@ else:
 
 
 # =========================================================
+# LIST PORTS
+# =========================================================
+def list_ports():
+    try:
+        import serial.tools.list_ports  # type: ignore
+        ports = list(serial.tools.list_ports.comports())
+        if ports:
+            print("Available serial ports:")
+            for p in ports:
+                print(f"  {p.device}: {p.description}")
+            sabertooth = find_sabertooth_port()
+            print(f"\nSabertooth auto-detect would pick: {sabertooth or 'none found'}")
+            pico = find_pico_port()
+            print(f"Pico auto-detect would pick:       {pico or 'none found'}")
+        else:
+            print("No serial ports found")
+    except ImportError:
+        print("pyserial not installed // pip install pyserial")
+
+
+# =========================================================
 # MAIN
 # =========================================================
 def main():
@@ -96,7 +117,13 @@ def main():
     parser.add_argument("--port", type=str, default=None, help="Serial port for Sabertooth (e.g. /dev/ttyUSB0, COM3)")
     parser.add_argument("--pico-port", type=str, default=None, help="Serial port for the Pico (e.g. COM4)")
     parser.add_argument("--no-pico", action="store_true", help="Disable Pico color reader")
+    parser.add_argument("--list-ports", action="store_true", help="List available serial ports and exit")
     args = parser.parse_args()
+
+    if args.list_ports:
+        list_ports()
+        return
+
 
     # ---------------- MOTOR DRIVE ----------------
     with MotorController(mock=args.mock, port=args.port) as motor:
