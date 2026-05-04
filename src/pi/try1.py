@@ -93,6 +93,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--mock", action="store_true")
+    parser.add_argument("--pico-port", type=str, default=None, help="Serial port for the Pico (e.g. COM4)")
+    parser.add_argument("--no-pico", action="store_true", help="Disable Pico color reader")
     args = parser.parse_args()
 
     # ---------------- MOTOR DRIVE ----------------
@@ -101,12 +103,12 @@ def main():
 
         # ---------------- PICO (OPTIONAL) ----------------
         pico = None
-        try:
-            pico = PicoColorReader()
-            print("Pico connected")
-        except Exception as e:
-            print("Pico NOT connected → running without sensor")
-            print(e)
+        if not args.no_pico:
+            try:
+                pico = PicoColorReader(port=args.pico_port)
+            except RuntimeError as e:
+                print(f"ERROR: could not connect to Pico: {e}")
+                print("Continuing without color reading. Use --no-pico to suppress this.")
 
         # ---------------- STATE ----------------
         brush_on = False
@@ -181,7 +183,7 @@ def main():
                         # STEPPER MOVE
                         stepper(200, True)
 
-                        last_color = color
+                        last_color = None # Reset last_color to allow re-detection of the same color after moving
 
         finally:
             print("\nShutting down safely...")

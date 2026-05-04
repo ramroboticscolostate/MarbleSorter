@@ -20,7 +20,7 @@ def rgb_to_hue(r, g, b):
     val = max_c * 100
     
     if diff == 0:
-        return 0
+        return 0, sat, val  # Hue is undefined for grayscale colors
     
     if max_c == r:
         hue = 60 * (((g - b) / diff) % 6)
@@ -92,6 +92,9 @@ while True:
         print('avg - R:{:.2f} G:{:.2f} B:{:.2f} C:{:.2f}'.format(r, g, b, c))
         
         rgb_max = max(r, g, b)
+        if rgb_max == 0:
+            print("No color data - skipping")
+            continue
 
         rn = int(r / rgb_max * 255)
         gn = int(g / rgb_max * 255)
