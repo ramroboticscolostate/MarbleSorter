@@ -2,17 +2,70 @@ import argparse
 import sys
 import time
 
-from motor import MotorController, find_sabertooth_port
+import RPi.GPIO as GPIO
+
+from motor import MotorController
 from drive import Drive
 from pico import PicoColorReader
-from actuators import Actuators
-
-TIMEOUT = 0.1  # keyboard polling timeout
 
 
-# ----------------------------
-# KEYBOARD INPUT
-# ----------------------------
+# =========================================================
+# GPIO SETUP
+# =========================================================
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+# ---- Motor driver pins (brush + conveyor) ----
+BRUSH_IN1 = 17
+BRUSH_IN2 = 27
+
+CONV_IN1 = 22
+CONV_IN2 = 23
+
+# ---- Stepper ----
+STEP_PIN = 6
+DIR_PIN = 5
+
+# ---- Servo ----
+SERVO_PIN = 18
+
+
+GPIO.setup([BRUSH_IN1, BRUSH_IN2, CONV_IN1, CONV_IN2], GPIO.OUT)
+GPIO.setup(STEP_PIN, GPIO.OUT)
+GPIO.setup(DIR_PIN, GPIO.OUT)
+GPIO.setup(SERVO_PIN, GPIO.OUT)
+
+
+# =========================================================
+# PWM SETUP (PERSISTENT)
+# =========================================================
+brush_pwm = GPIO.PWM(BRUSH_IN1, 1000)
+conv_pwm = GPIO.PWM(CONV_IN1, 1000)
+servo_pwm = GPIO.PWM(SERVO_PIN, 50)
+
+brush_pwm.start(0)
+conv_pwm.start(0)
+servo_pwm.start(0)
+
+
+# =========================================================
+# STEPPER FUNCTION
+# =========================================================
+def stepper(steps, direction=True, delay=0.001):
+    GPIO.output(DIR_PIN, direction)
+
+    for _ in range(steps):
+        GPIO.output(STEP_PIN, True)
+        time.sleep(delay)
+        GPIO.output(STEP_PIN, False)
+        time.sleep(delay)
+
+
+# =========================================================
+# KEY INPUT
+# =========================================================
+TIMEOUT = 0.1
+
 if sys.platform == "win32":
     import msvcrt
 
@@ -20,12 +73,7 @@ if sys.platform == "win32":
         end = time.time() + TIMEOUT
         while time.time() < end:
             if msvcrt.kbhit():
-                key = msvcrt.getwch()
-                if key in ("\x00", "\xe0"):
-                    msvcrt.getwch()
-                    return ""
-                return key
-            time.sleep(0.005)
+                return msvcrt.getwch()
         return None
 
 else:
@@ -38,183 +86,121 @@ else:
         return None
 
 
-# ----------------------------
-# ARGUMENTS
-# ----------------------------
-def addArguments(parser):
-    parser.add_argument("--mock", action="store_true")
-    parser.add_argument("--speed", type=int, default=30)
-    parser.add_argument("--port", type=str, default=None)
-    parser.add_argument("--list-ports", action="store_true")
-    parser.add_argument("--pico-port", type=str, default=None)
-    parser.add_argument("--no-pico", action="store_true")
-    return parser.parse_args()
-
-
-# ----------------------------
+# =========================================================
 # MAIN
-# ----------------------------
+# =========================================================
 def main():
 
     parser = argparse.ArgumentParser()
-    args = addArguments(parser)
+    parser.add_argument("--mock", action="store_true")
+    args = parser.parse_args()
 
-    if args.list_ports:
-        import serial.tools.list_ports
-        ports = list(serial.tools.list_ports.comports())
-        for p in ports:
-            print(p.device, p.description)
-        return
+    # ---------------- MOTOR DRIVE ----------------
+    with MotorController(mock=args.mock) as motor:
+        drive = Drive(motor)
 
-    # ----------------------------
-    # PICO SETUP
-    # ----------------------------
-    pico = None
-    if not args.no_pico:
+        # ---------------- PICO (OPTIONAL) ----------------
+        pico = None
         try:
-            pico = PicoColorReader(port=args.pico_port)
+            pico = PicoColorReader()
+            print("Pico connected")
         except Exception as e:
-            print("Pico error:", e)
-            pico = None
+            print("Pico NOT connected → running without sensor")
+            print(e)
 
-    # ----------------------------
-    # MOTOR + DRIVE SETUP
-    # ----------------------------
-    with MotorController(mock=args.mock, port=args.port) as motor:
-
-        drive = Drive(motor, speed=args.speed)
-        act = Actuators()
-
-        # ----------------------------
-        # STATE VARIABLES
-        # ----------------------------
+        # ---------------- STATE ----------------
         brush_on = False
         conveyor_on = False
         last_color = None
 
         print("\nRobot Ready")
-        print("WASD = drive | Z/X = spin | SPACE = stop")
-        print("B = brush toggle | C = conveyor toggle")
-        print("+/- = speed | Q = quit\n")
+        print("WASD drive | B brush | C conveyor | Q quit")
 
-        # ----------------------------
-        # KEY COMMAND MAP
-        # ----------------------------
-        commands = {
-            "w": drive.forward,
-            "s": drive.backward,
-            "a": drive.left,
-            "d": drive.right,
-            "z": drive.spinLeft,
-            "x": drive.spinRight,
-            " ": drive.stop,
-        }
-
-        # ----------------------------
-        # RAW MODE (LINUX)
-        # ----------------------------
+        # ---------------- LINUX RAW MODE ----------------
         if sys.platform != "win32":
             fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
+            old = termios.tcgetattr(fd)
             tty.setraw(fd)
 
         try:
-            moving = False
-
             while True:
 
                 cmd = getKey()
 
-                # ----------------------------
-                # EXIT
-                # ----------------------------
-                if cmd in ("q", "\x03", "\x1b"):
-                    print("\nShutting down...")
-                    drive.stop()
+                # ---------------- EXIT ----------------
+                if cmd in ("q", "\x03"):
                     break
 
-                # ----------------------------
-                # SPEED CONTROL
-                # ----------------------------
-                elif cmd == "+":
-                    drive.set_speed(min(Drive.MAX_SPEED, drive.speed + 5))
+                # ---------------- DRIVE ----------------
+                if cmd == "w":
+                    drive.forward()
+                elif cmd == "s":
+                    drive.backward()
+                elif cmd == "a":
+                    drive.left()
+                elif cmd == "d":
+                    drive.right()
+                elif cmd == " ":
+                    drive.stop()
 
-                elif cmd == "-":
-                    drive.set_speed(max(1, drive.speed - 5))
-
-                # ----------------------------
-                # TOGGLES
-                # ----------------------------
+                # ---------------- TOGGLES ----------------
                 elif cmd == "b":
                     brush_on = not brush_on
-                    print(f"Brush: {'ON' if brush_on else 'OFF'}")
+                    print("Brush:", brush_on)
 
                 elif cmd == "c":
                     conveyor_on = not conveyor_on
-                    print(f"Conveyor: {'ON' if conveyor_on else 'OFF'}")
+                    print("Conveyor:", conveyor_on)
 
-                # ----------------------------
-                # DRIVE COMMANDS
-                # ----------------------------
-                elif cmd in commands:
-                    commands[cmd]()
-                    moving = True
-
-                else:
-                    if moving:
-                        drive.stop()
-                        moving = False
-
-                # ----------------------------
-                # ACTUATOR CONTROL LOOP
-                # ----------------------------
-
-                # Brush roller (GPIO example pins)
+                # ---------------- BRUSH CONTROL ----------------
                 if brush_on:
-                    act.motor(17, 27, 60)
+                    GPIO.output(BRUSH_IN2, GPIO.LOW)
+                    brush_pwm.ChangeDutyCycle(70)
                 else:
-                    act.motor(17, 27, 0)
+                    brush_pwm.ChangeDutyCycle(0)
 
-                # Conveyor belt
+                # ---------------- CONVEYOR CONTROL ----------------
                 if conveyor_on:
-                    act.motor(22, 23, 60)
+                    GPIO.output(CONV_IN2, GPIO.LOW)
+                    conv_pwm.ChangeDutyCycle(70)
                 else:
-                    act.motor(22, 23, 0)
+                    conv_pwm.ChangeDutyCycle(0)
 
-                # ----------------------------
-                # PICO COLOR EVENT TRIGGER
-                # ----------------------------
+                # ---------------- PICO COLOR EVENT ----------------
                 if pico:
                     color = pico.get_color()
 
                     if color and color != last_color:
-                        print(f"\nColor detected: {color}")
+                        print("Color detected:", color)
 
-                        # SERVO ACTION
-                        servo = act.servo(pin=18, angle=90)
+                        # SERVO MOVE
+                        servo_pwm.ChangeDutyCycle(7)  # ~90°
                         time.sleep(0.5)
-                        servo.ChangeDutyCycle(0)
-                        servo.stop()
+                        servo_pwm.ChangeDutyCycle(0)
 
-                        # STEPPER ACTION (adjust steps later)
-                        act.stepper(True, 200)
+                        # STEPPER MOVE
+                        stepper(200, True)
 
                         last_color = color
 
-        except KeyboardInterrupt:
-            print("\nInterrupted")
+        finally:
+            print("\nShutting down safely...")
+
             drive.stop()
 
-        finally:
-            if sys.platform != "win32":
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            brush_pwm.stop()
+            conv_pwm.stop()
+            servo_pwm.stop()
+
+            GPIO.cleanup()
+
             if pico:
                 pico.close()
 
+            if sys.platform != "win32":
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
-# ----------------------------
-# RUN
-# ----------------------------
+
+# =========================================================
 if __name__ == "__main__":
     main()
-    
