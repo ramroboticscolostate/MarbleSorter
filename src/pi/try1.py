@@ -1,6 +1,7 @@
 import argparse
 import sys
 import time
+import threading
 
 import RPi.GPIO as GPIO
 
@@ -142,6 +143,7 @@ def main():
         brush_on = False
         conveyor_on = False
         last_color = None
+        sorting = False
 
         print("\nRobot Ready")
         print("WASD drive | B brush | C conveyor | Q quit")
@@ -200,18 +202,21 @@ def main():
                 if pico:
                     color = pico.get_color()
 
-                    if color and color != last_color:
+                    if color and color != last_color and not sorting:
                         print("Color detected:", color)
+                        last_color = color
+                        sorting = True
 
-                        # SERVO MOVE
-                        servo_pwm.ChangeDutyCycle(7)  # ~90°
-                        time.sleep(0.5)
-                        servo_pwm.ChangeDutyCycle(0)
+                        def do_sort():
+                            nonlocal last_color, sorting
+                            servo_pwm.ChangeDutyCycle(7)  # ~90°
+                            time.sleep(0.5)
+                            servo_pwm.ChangeDutyCycle(0)
+                            stepper(200, True)
+                            last_color = None
+                            sorting = False
 
-                        # STEPPER MOVE
-                        stepper(200, True)
-
-                        last_color = None # Reset last_color to allow re-detection of the same color after moving
+                        threading.Thread(target=do_sort, daemon=True).start()
 
         finally:
             print("\nShutting down safely...")
