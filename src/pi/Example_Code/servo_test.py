@@ -1,4 +1,4 @@
-from gpiozero import Servo
+from gpiozero import Servo # type: ignore
 import time
 
 # Connect the servo signal wire to a PWM-capable GPIO pin.
@@ -24,7 +24,7 @@ try:
         servo.max()
         time.sleep(3)
 
-        print("Swegiteping servo smoothly...")
+        print("Sweeping servo smoothly...")
         for position in [i / 10 for i in range(-10, 11)]:
             servo.value = position
             time.sleep(0.05)

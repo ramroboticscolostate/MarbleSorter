@@ -2,7 +2,7 @@ import argparse
 import sys
 import time
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO # type: ignore
 
 from motor import MotorController, find_sabertooth_port
 from drive import Drive

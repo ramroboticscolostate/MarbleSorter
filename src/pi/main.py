@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO # type: ignore
 
 from motor import MotorController, find_sabertooth_port
 from drive import Drive
@@ -53,14 +53,35 @@ servo_pwm.start(0)
 # =========================================================
 # STEPPER FUNCTION
 # =========================================================
+step = 0
+stepperOfset = 0
+
 def stepper(steps, direction=True, delay=0.001):
+    global step
+
     GPIO.output(DIR_PIN, direction)
     for _ in range(steps):
+        step += 1 if direction else -1
         GPIO.output(STEP_PIN, True)
         time.sleep(delay)
         GPIO.output(STEP_PIN, False)
         time.sleep(delay)
 
+    return step
+
+def setStepperOfset(pin):
+    global stepperOfset
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+    steps = 0
+    value = GPIO.input(pin)
+    while value == 0:
+        stepper(1, True)
+        value = GPIO.input(pin)
+        steps += 1
+
+    stepperOfset = steps
+    return stepperOfset
 
 # =========================================================
 # KEY INPUT
@@ -179,6 +200,19 @@ def main():
                 elif cmd in commands:
                     commands[cmd]()
                     moving = True
+
+                # ---------------- STEPPER ----------------
+
+                # elif cmd == "o":
+                #     print("Calibrating stepper offset...", end="\r\n")
+                #     offset = setStepperOfset(STEP_PIN)
+                #     print(f"Stepper offset set to {offset} steps", end="\r\n")
+
+                elif cmd == "r":
+                    print("Rotating stepper 90°...", end="\r\n")
+                    stepper(200*4, True)  # Adjust steps for 90° based on your hardware
+                    print("Rotation complete.", end="\r\n")
+
 
                 # ---------------- SERVO TEST ----------------
                 elif cmd == "v":

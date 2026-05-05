@@ -51,7 +51,8 @@ class PicoColorReader:
                     with self._lock:
                         self.color = color_name
                     print(f"\r\n[Pico] {line}", end="\r\n")
-            except Exception:
+            except Exception as e:
+                print(f"Error reading from Pico serial port: {e}")
                 break
 
     def get_color(self):

@@ -1,4 +1,4 @@
-from gpiozero import PWMLED
+from gpiozero import PWMLED # type: ignore
 from signal import pause
 import time
 
