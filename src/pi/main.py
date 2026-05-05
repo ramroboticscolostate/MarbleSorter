@@ -141,14 +141,16 @@ def main():
             " ": drive.stop,
         }
 
-        brush_on  = False
-        conveyor_on = False
-        last_color  = None
-        sorting     = False
+        brush_on       = False
+        brush_speed    = 70
+        conveyor_on    = False
+        conveyor_speed = 70
+        last_color     = None
+        sorting        = False
 
         print("Robot ready")
-        print("Hold w/a/s/d to move, z/x to spin | B brush | C conveyor | +/- speed | q = quit")
-        print(f"Speed: {drive.speed}")
+        print("Hold w/a/s/d to move, z/x to spin | B brush | [ ] brush speed | C conveyor | , . conveyor speed | +/- drive speed | q = quit")
+        print(f"Drive speed: {drive.speed} | Brush speed: {brush_speed} | Conveyor speed: {conveyor_speed}")
 
         if sys.platform != "win32":
             fd = sys.stdin.fileno()
@@ -180,10 +182,22 @@ def main():
                 # ---------------- TOGGLES ----------------
                 elif cmd == "b":
                     brush_on = not brush_on
-                    print("Brush:", brush_on)
+                    print(f"Brush: {'on' if brush_on else 'off'} | Speed: {brush_speed}", end="\r\n")
+                elif cmd == "]":
+                    brush_speed = min(100, brush_speed + 10)
+                    print(f"Brush speed: {brush_speed}", end="\r\n")
+                elif cmd == "[":
+                    brush_speed = max(10, brush_speed - 10)
+                    print(f"Brush speed: {brush_speed}", end="\r\n")
                 elif cmd == "c":
                     conveyor_on = not conveyor_on
-                    print("Conveyor:", conveyor_on)
+                    print(f"Conveyor: {'on' if conveyor_on else 'off'} | Speed: {conveyor_speed}", end="\r\n")
+                elif cmd == ".":
+                    conveyor_speed = min(100, conveyor_speed + 10)
+                    print(f"Conveyor speed: {conveyor_speed}", end="\r\n")
+                elif cmd == ",":
+                    conveyor_speed = max(10, conveyor_speed - 10)
+                    print(f"Conveyor speed: {conveyor_speed}", end="\r\n")
 
                 # ---------------- AUTO-STOP ----------------
                 else:
@@ -194,14 +208,14 @@ def main():
                 # ---------------- BRUSH CONTROL ----------------
                 if brush_on:
                     GPIO.output(BRUSH_IN2, GPIO.LOW)
-                    brush_pwm.ChangeDutyCycle(70)
+                    brush_pwm.ChangeDutyCycle(brush_speed)
                 else:
                     brush_pwm.ChangeDutyCycle(0)
 
                 # ---------------- CONVEYOR CONTROL ----------------
                 if conveyor_on:
                     GPIO.output(CONV_IN2, GPIO.LOW)
-                    conv_pwm.ChangeDutyCycle(70)
+                    conv_pwm.ChangeDutyCycle(conveyor_speed)
                 else:
                     conv_pwm.ChangeDutyCycle(0)
 

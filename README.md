@@ -38,8 +38,10 @@ python src/pi/main.py --port /dev/ttyUSB0 --no-pico
 | Z / X | Spin Left / Right |
 | Space | Stop |
 | B | Toggle brush |
+| ] / [ | Increase / Decrease brush speed |
 | C | Toggle conveyor |
-| + / - | Increase / Decrease speed |
+| . / , | Increase / Decrease conveyor speed |
+| + / - | Increase / Decrease drive speed |
 | Q | Quit |
 
 ## Sorting
