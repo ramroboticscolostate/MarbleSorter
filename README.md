@@ -1,5 +1,5 @@
 # MarbleSorter
-CSU RamRobotics Club — Spring 2026
+CSU RamRobotics Club [Spring 2026]
 
 ## Setup
 ```
