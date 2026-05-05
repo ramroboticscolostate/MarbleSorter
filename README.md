@@ -42,6 +42,7 @@ python src/pi/main.py --port /dev/ttyUSB0 --no-pico
 | C | Toggle conveyor |
 | . / , | Increase / Decrease conveyor speed |
 | + / - | Increase / Decrease drive speed |
+| V | Servo test (sweep min → mid → max → sweep) |
 | Q | Quit |
 
 ## Sorting

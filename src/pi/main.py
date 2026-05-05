@@ -147,9 +147,10 @@ def main():
         conveyor_speed = 70
         last_color     = None
         sorting        = False
+        servo_testing  = False
 
         print("Robot ready")
-        print("Hold w/a/s/d to move, z/x to spin | B brush | [ ] brush speed | C conveyor | , . conveyor speed | +/- drive speed | q = quit")
+        print("Hold w/a/s/d to move, z/x to spin | B brush | [ ] brush speed | C conveyor | , . conveyor speed | +/- drive speed | V servo test | q = quit")
         print(f"Drive speed: {drive.speed} | Brush speed: {brush_speed} | Conveyor speed: {conveyor_speed}")
 
         if sys.platform != "win32":
@@ -178,6 +179,35 @@ def main():
                 elif cmd in commands:
                     commands[cmd]()
                     moving = True
+
+                # ---------------- SERVO TEST ----------------
+                elif cmd == "v":
+                    if not servo_testing and not sorting:
+                        servo_testing = True
+                        print("Servo test starting...", end="\r\n")
+
+                        def run_servo_test():
+                            nonlocal servo_testing
+                            # min → mid → max
+                            servo_pwm.ChangeDutyCycle(2.5)
+                            time.sleep(1)
+                            servo_pwm.ChangeDutyCycle(7.5)
+                            time.sleep(1)
+                            servo_pwm.ChangeDutyCycle(12.5)
+                            time.sleep(3)
+                            # sweep min → max
+                            for v in [2.5 + (i / 10) * 10 for i in range(0, 21)]:
+                                servo_pwm.ChangeDutyCycle(v)
+                                time.sleep(0.05)
+                            # sweep max → min
+                            for v in [12.5 - (i / 10) * 10 for i in range(0, 21)]:
+                                servo_pwm.ChangeDutyCycle(v)
+                                time.sleep(0.05)
+                            servo_pwm.ChangeDutyCycle(0)
+                            print("Servo test complete.", end="\r\n")
+                            servo_testing = False
+
+                        threading.Thread(target=run_servo_test, daemon=True).start()
 
                 # ---------------- TOGGLES ----------------
                 elif cmd == "b":
