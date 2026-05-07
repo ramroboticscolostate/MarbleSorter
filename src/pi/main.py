@@ -219,7 +219,7 @@ def main():
                     servo_pwm.ChangeDutyCycle(2.5)
                     time.sleep(.1)
                 elif cmd == "1":
-                    servo_pwm.ChangeDutyCycle(7.5)
+                    servo_pwm.ChangeDutyCycle(10)
                     time.sleep(.1)
                 elif cmd == "2":
                     servo_pwm.ChangeDutyCycle(12.5)
