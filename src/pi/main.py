@@ -215,33 +215,42 @@ def main():
 
 
                 # ---------------- SERVO TEST ----------------
-                elif cmd == "v":
-                    if not servo_testing and not sorting:
-                        servo_testing = True
-                        print("Servo test starting...", end="\r\n")
+                elif cmd == "0":
+                    servo_pwm.ChangeDutyCycle(2.5)
+                    time.sleep(.1)
+                elif cmd == "1":
+                    servo_pwm.ChangeDutyCycle(7.5)
+                    time.sleep(.1)
+                elif cmd == "2":
+                    servo_pwm.ChangeDutyCycle(12.5)
+                    time.sleep(.1)
 
-                        def run_servo_test():
-                            nonlocal servo_testing
-                            # min → mid → max
-                            servo_pwm.ChangeDutyCycle(2.5)
-                            time.sleep(1)
-                            servo_pwm.ChangeDutyCycle(7.5)
-                            time.sleep(1)
-                            servo_pwm.ChangeDutyCycle(12.5)
-                            time.sleep(3)
-                            # sweep min → max
-                            for v in [2.5 + (i / 10) * 10 for i in range(0, 21)]:
-                                servo_pwm.ChangeDutyCycle(v)
-                                time.sleep(0.05)
-                            # sweep max → min
-                            for v in [12.5 - (i / 10) * 10 for i in range(0, 21)]:
-                                servo_pwm.ChangeDutyCycle(v)
-                                time.sleep(0.05)
-                            servo_pwm.ChangeDutyCycle(0)
-                            print("Servo test complete.", end="\r\n")
-                            servo_testing = False
+                    # if not servo_testing and not sorting:
+                    #     servo_testing = True
+                    #     print("Servo test starting...", end="\r\n")
 
-                        threading.Thread(target=run_servo_test, daemon=True).start()
+                    #     def run_servo_test():
+                    #         nonlocal servo_testing
+                    #         # min → mid → max
+                    #         servo_pwm.ChangeDutyCycle(2.5)
+                    #         time.sleep(1)
+                    #         servo_pwm.ChangeDutyCycle(7.5)
+                    #         time.sleep(1)
+                    #         servo_pwm.ChangeDutyCycle(12.5)
+                    #         time.sleep(3)
+                    #         # sweep min → max
+                    #         for v in [2.5 + (i / 10) * 10 for i in range(0, 21)]:
+                    #             servo_pwm.ChangeDutyCycle(v)
+                    #             time.sleep(0.05)
+                    #         # sweep max → min
+                    #         for v in [12.5 - (i / 10) * 10 for i in range(0, 21)]:
+                    #             servo_pwm.ChangeDutyCycle(v)
+                    #             time.sleep(0.05)
+                    #         servo_pwm.ChangeDutyCycle(0)
+                    #         print("Servo test complete.", end="\r\n")
+                    #         servo_testing = False
+
+                    #     threading.Thread(target=run_servo_test, daemon=True).start()
 
                 # ---------------- TOGGLES ----------------
                 elif cmd == "b":
