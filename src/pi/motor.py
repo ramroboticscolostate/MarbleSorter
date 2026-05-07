@@ -10,11 +10,23 @@ except ImportError:
 
 def find_sabertooth_port():
     """Scan serial ports and return the best candidate for the Sabertooth."""
-    ports = serial.tools.list_ports.comports()
+    ports = list(serial.tools.list_ports.comports())
+
+    # First pass: match known Sabertooth/FTDI identifiers
     for port in ports:
         desc = (port.description or "").lower()
-        if any(kw in desc for kw in ["usb", "uart", "serial", "sabertooth"]):
+        if any(kw in desc for kw in ["sabertooth", "ftdi", "uart"]):
             return port.device
+
+    # Second pass: exclude known Pico identifiers and return if unambiguous
+    pico_keywords = ["pico", "circuitpython", "micropython", "cdc"]
+    candidates = [
+        p.device for p in ports
+        if not any(kw in (p.description or "").lower() for kw in pico_keywords)
+    ]
+    if len(candidates) == 1:
+        return candidates[0]
+
     return None
 
 
