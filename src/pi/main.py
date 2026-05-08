@@ -213,6 +213,10 @@ def main():
                     stepper(200*4, True)  # Adjust steps for 90° based on your hardware
                     print("Rotation complete.", end="\r\n")
 
+                # ---------------- PICO ----------------
+                elif cmd == "p" and pico:
+                    color = pico.get_color()
+                    print(f"Pico color: {color}", end="\r\n")
 
                 # ---------------- SERVO TEST ----------------
                 elif cmd == "0":
