@@ -217,6 +217,9 @@ def main():
                 elif cmd == "p" and pico:
                     color = pico.get_color()
                     print(f"Pico color: {color}", end="\r\n")
+                elif cmd == "l" and pico:
+                    pico.refresh()
+                    print("Requested Pico color refresh", end="\r\n")
 
                 # ---------------- SERVO TEST ----------------
                 elif cmd == "0":

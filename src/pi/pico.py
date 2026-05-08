@@ -55,6 +55,11 @@ class PicoColorReader:
                 print(f"Error reading from Pico serial port: {e}")
                 break
 
+    def refresh(self):
+        """Manually trigger a color read (if Pico is set to only send on demand)"""
+        if self.ser.is_open:
+            self.ser.write(b"\x04")
+
     def get_color(self):
         with self._lock:
             return self.color
