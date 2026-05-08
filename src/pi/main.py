@@ -304,20 +304,19 @@ def main():
                     color = pico.get_color()
 
                     if color and color != last_color and not sorting:
-                        print("Color detected:", color)
+                        print("\nColor detected:", color)
                         last_color = color
-                        sorting = True
+                        # sorting = True
 
-                        def do_sort():
-                            nonlocal last_color, sorting
-                            servo_pwm.ChangeDutyCycle(7)  # ~90°
-                            time.sleep(0.5)
-                            servo_pwm.ChangeDutyCycle(0)
-                            stepper(200, True)
-                            last_color = None
-                            sorting = False
+                        # def do_sort():
+                        #     nonlocal last_color, sorting
+                        #     servo_pwm.ChangeDutyCycle(7)  # ~90°
+                        #     time.sleep(0.5)
+                        #     servo_pwm.ChangeDutyCycle(0)
+                        #     stepper(200, True)
+                        #     sorting = False
 
-                        threading.Thread(target=do_sort, daemon=True).start()
+                        # threading.Thread(target=do_sort, daemon=True).start()
 
         except KeyboardInterrupt:
             print("\nInterrupted")
